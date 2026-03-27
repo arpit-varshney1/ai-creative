@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI.CREATIVE — Writing Studio</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║  AI.CREATIVE — MEGA ADVANCED DASHBOARD                         ║
+   ║  3D · Glassmorphism · Particles · Custom Cursor · Animations   ║
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+:root {
+    --bg: #03040a;
+    --bg2: #080b16;
+    --bg-card: rgba(10,12,24,0.85);
+    --primary: #6c63ff;
+    --primary-light: #8b83ff;
+    --secondary: #a855f7;
+    --accent: #f59e0b;
+    --cyan: #22d3ee;
+    --pink: #ec4899;
+    --emerald: #10b981;
+    --error: #f87171;
+    --warning: #fbbf24;
+    --glass-bg: rgba(255,255,255,0.03);
+    --glass-bg2: rgba(255,255,255,0.06);
+    --glass-border: rgba(255,255,255,0.07);
+    --glass-border2: rgba(255,255,255,0.12);
+    --ink: #f0f4ff;
+    --ink2: #c8d4f0;
+    --muted: #6b7a99;
+    --radius: 20px;
+    --radius-sm: 14px;
+    --radius-xs: 10px;
+    --smooth: cubic-bezier(0.16, 1, 0.3, 1);
+    --bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; scroll-behavior: smooth; }
+body {
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    cursor: none;
+}
+
+/* ═══ NOISE GRAIN ═══ */
+body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 2;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0.03"/></feComponentTransfer></filter><rect width="100%" height="100%" filter="url(%23n)"/></svg>');
+    opacity: .2; mix-blend-mode: overlay;
+}
+
+/* ═══ CUSTOM CURSOR ═══ */
+.cursor-dot {
+    position: fixed; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--cyan); pointer-events: none; z-index: 99999;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s, height 0.2s, background 0.3s;
+    box-shadow: 0 0 20px rgba(34,211,238,0.5), 0 0 60px rgba(34,211,238,0.2);
+    mix-blend-mode: difference;
+}
+.cursor-ring {
+    position: fixed; width: 40px; height: 40px; border-radius: 50%;
+    border: 1.5px solid rgba(108,99,255,0.4);
+    pointer-events: none; z-index: 99998;
+    transform: translate(-50%, -50%);
+    transition: width 0.35s var(--smooth), height 0.35s var(--smooth),
+                border-color 0.3s, background 0.3s;
+}
+.cursor-dot.hover { width: 50px; height: 50px; background: rgba(108,99,255,0.12); mix-blend-mode: normal; }
+.cursor-ring.hover { width: 70px; height: 70px; border-color: var(--primary); background: rgba(108,99,255,0.04); }
+
+/* ═══ BACKGROUND SYSTEMS ═══ */
+#bg3d { position: fixed; inset: 0; z-index: 0; }
+#particleCanvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+
+.aurora { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+.aurora-band {
+    position: absolute; width: 250%; height: 400px;
+    filter: blur(120px); opacity: 0;
+    animation: aurora-drift 15s ease-in-out infinite;
+}
+.aurora-band:nth-child(1) {
+    top: -8%; left: -80%;
+    background: linear-gradient(90deg, transparent, rgba(108,99,255,0.12), rgba(168,85,247,0.08), transparent);
+}
+.aurora-band:nth-child(2) {
+    top: 20%; left: -60%;
+    background: linear-gradient(90deg, transparent, rgba(34,211,238,0.06), rgba(108,99,255,0.1), transparent);
+    animation-delay: -5s; animation-duration: 18s;
+}
+.aurora-band:nth-child(3) {
+    bottom: 0%; left: -70%;
+    background: linear-gradient(90deg, transparent, rgba(236,72,153,0.05), rgba(245,158,11,0.04), transparent);
+    animation-delay: -10s; animation-duration: 20s;
+}
+@keyframes aurora-drift {
+    0%, 100% { opacity: 0; transform: translateX(-5%) rotate(-2deg) scaleY(1); }
+    20% { opacity: 0.8; }
+    50% { opacity: 0.5; transform: translateX(15%) rotate(1deg) scaleY(1.4); }
+    80% { opacity: 0.9; }
+}
+
+.perspective-grid {
+    position: fixed; bottom: 0; left: 0; right: 0; height: 50vh;
+    z-index: 1; pointer-events: none;
+    background:
+        linear-gradient(rgba(108,99,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(108,99,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    transform: perspective(500px) rotateX(55deg); transform-origin: bottom;
+    mask-image: linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 70%);
+    -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,0.3) 0%, transparent 70%);
+    animation: grid-scroll 20s linear infinite;
+}
+@keyframes grid-scroll { 0% { background-position: 0 0; } 100% { background-position: 0 60px; } }
+
+.shooting-stars { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+.shooting-star {
+    position: absolute; width: 100px; height: 1px;
+    background: linear-gradient(90deg, rgba(108,99,255,0.8), transparent);
+    opacity: 0; animation: shoot 6s ease-in-out infinite;
+}
+.ss-1 { top: 15%; left: -100px; transform: rotate(-15deg); }
+.ss-2 { top: 35%; left: -100px; animation-delay: 2.5s; transform: rotate(-10deg); width: 70px; }
+.ss-3 { top: 55%; left: -100px; animation-delay: 4.2s; transform: rotate(-20deg); width: 120px; }
+@keyframes shoot {
+    0% { opacity: 0; transform: translateX(0) rotate(-15deg); }
+    5% { opacity: 1; }
+    15% { opacity: 0; transform: translateX(calc(100vw + 200px)) rotate(-15deg); }
+    100% { opacity: 0; }
+}
+
+.floating-elements { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+.float-el {
+    position: absolute; opacity: 0.35;
+    animation: float-complex 25s ease-in-out infinite;
+}
+.float-el svg { filter: drop-shadow(0 0 8px currentColor); }
+.fe-1 { top: 12%; left: 4%; color: var(--primary); }
+.fe-2 { top: 65%; left: 2%; color: var(--cyan); animation-delay: -5s; }
+.fe-3 { top: 25%; right: 3%; color: var(--pink); animation-delay: -10s; }
+.fe-4 { bottom: 12%; right: 6%; color: var(--accent); animation-delay: -15s; }
+.fe-5 { top: 80%; left: 18%; color: var(--secondary); animation-delay: -20s; }
+.fe-6 { top: 8%; right: 22%; color: var(--emerald); animation-delay: -8s; }
+@keyframes float-complex {
+    0%, 100% { transform: translate(0,0) rotate(0deg) scale(1); }
+    15% { transform: translate(15px,-25px) rotate(60deg) scale(1.1); }
+    30% { transform: translate(-10px,15px) rotate(120deg) scale(0.9); }
+    50% { transform: translate(20px,-10px) rotate(180deg) scale(1.05); }
+    70% { transform: translate(-15px,-20px) rotate(260deg) scale(0.95); }
+    85% { transform: translate(10px,10px) rotate(320deg) scale(1.08); }
+}
+
+/* ═══ NAVIGATION ═══ */
+nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 0 clamp(16px, 3vw, 40px); height: 70px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(3,4,10,0.7);
+    backdrop-filter: blur(24px) saturate(1.4);
+    border-bottom: 1px solid var(--glass-border);
+    transition: all 0.5s var(--smooth);
+}
+nav.scrolled {
+    background: rgba(3,4,10,0.92);
+    box-shadow: 0 4px 40px rgba(0,0,0,0.3);
+}
+
+.logo {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none; cursor: pointer;
+}
+.logo-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    display: grid; place-items: center;
+    box-shadow: 0 4px 20px rgba(108,99,255,0.4);
+    position: relative; overflow: hidden;
+    animation: logo-breathe 4s ease-in-out infinite;
+}
+@keyframes logo-breathe {
+    0%, 100% { box-shadow: 0 4px 20px rgba(108,99,255,0.4); }
+    50% { box-shadow: 0 6px 30px rgba(168,85,247,0.5); }
+}
+.logo-icon::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.2));
+}
+.logo-icon svg { width: 20px; height: 20px; fill: white; position: relative; z-index: 1; }
+.logo-text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 1.3rem; letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #fff, var(--cyan));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.nav-center {
+    display: flex; gap: 4px; padding: 4px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+    border-radius: 12px;
+}
+.nav-tab {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 9px;
+    font-size: 0.84rem; font-weight: 600; color: var(--muted);
+    cursor: pointer; transition: all 0.3s var(--smooth);
+    white-space: nowrap;
+}
+.nav-tab:hover { color: var(--ink2); background: rgba(255,255,255,0.04); }
+.nav-tab.active {
+    color: var(--ink);
+    background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(168,85,247,0.08));
+    box-shadow: 0 2px 10px rgba(108,99,255,0.15);
+}
+.nav-tab svg { stroke: currentColor; }
+
+.nav-right { display: flex; align-items: center; gap: 12px; }
+
+.nav-status {
+    display: flex; align-items: center; gap: 7px;
+    padding: 6px 14px; border-radius: 50px;
+    background: rgba(16,185,129,0.08);
+    border: 1px solid rgba(16,185,129,0.15);
+    font-size: 0.76rem; font-weight: 600; color: var(--emerald);
+}
+.status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--emerald);
+    box-shadow: 0 0 10px var(--emerald);
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+@keyframes pulse-glow {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.4; box-shadow: 0 0 18px var(--emerald); }
+}
+
+.nav-profile {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 14px 6px 8px; border-radius: 50px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    cursor: pointer; transition: all 0.3s;
+    font-size: 0.82rem; font-weight: 600; color: var(--muted);
+}
+.nav-profile:hover { background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.2); color: var(--error); }
+.profile-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    display: grid; place-items: center;
+}
+.profile-avatar svg { stroke: white; }
+.profile-text { font-weight: 600; }
+.nav-profile svg:last-child { margin-left: 2px; }
+
+/* ═══ MAIN CONTENT ═══ */
+.main-content {
+    position: relative; z-index: 3;
+    padding: 90px 5vw 60px;
+    min-height: 100vh;
+}
+
+.page-section {
+    display: none;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: section-in 0.7s var(--smooth) forwards;
+}
+.page-section.active { display: block; }
+@keyframes section-in { to { opacity: 1; transform: translateY(0); } }
+
+/* ═══ HOME SECTION ═══ */
+.home-hero { text-align: center; max-width: 700px; margin: 0 auto 60px; }
+
+.hero-badge {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 8px 22px; border-radius: 50px;
+    background: linear-gradient(135deg, rgba(108,99,255,0.1), rgba(168,85,247,0.06));
+    border: 1px solid rgba(108,99,255,0.2);
+    font-size: 0.82rem; font-weight: 600; color: var(--primary-light);
+    margin-bottom: 28px;
+    animation: badge-shimmer 3s ease-in-out infinite;
+}
+@keyframes badge-shimmer {
+    0%, 100% { border-color: rgba(108,99,255,0.2); }
+    50% { border-color: rgba(108,99,255,0.5); box-shadow: 0 0 20px rgba(108,99,255,0.1); }
+}
+.badge-pulse {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--primary); animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.page-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 700;
+    line-height: 1.1; letter-spacing: -1.5px; margin-bottom: 20px;
+}
+.title-line { display: block; overflow: hidden; }
+.title-line span {
+    display: inline-block; opacity: 0; transform: translateY(100%);
+    animation: title-reveal 0.9s var(--smooth) forwards;
+}
+.title-line:nth-child(1) span { animation-delay: 0.2s; }
+.title-line:nth-child(2) span { animation-delay: 0.4s; }
+@keyframes title-reveal { to { opacity: 1; transform: translateY(0); } }
+
+.title-gradient {
+    background: linear-gradient(135deg, var(--primary), var(--cyan), var(--pink));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    background-size: 300% 300%;
+    animation: mega-gradient 6s ease-in-out infinite;
+}
+@keyframes mega-gradient { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+.page-desc {
+    font-size: 1.05rem; color: var(--muted); line-height: 1.7;
+    opacity: 0; animation: fade-up 0.8s var(--smooth) 0.6s forwards;
+    transform: translateY(15px);
+}
+@keyframes fade-up { to { opacity: 1; transform: translateY(0); } }
+
+/* ═══ CHOICE CARDS ═══ */
+.choice-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px; max-width: 1100px; margin: 0 auto 50px;
+}
+.choice-card {
+    position: relative; padding: 36px 30px; border-radius: var(--radius);
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    cursor: pointer; overflow: hidden;
+    transition: all 0.45s var(--smooth);
+    opacity: 0; transform: translateY(30px);
+    animation: card-up 0.7s var(--smooth) forwards;
+}
+.choice-card:nth-child(1) { animation-delay: 0.3s; }
+.choice-card:nth-child(2) { animation-delay: 0.45s; }
+.choice-card:nth-child(3) { animation-delay: 0.6s; }
+@keyframes card-up { to { opacity: 1; transform: translateY(0); } }
+
+.choice-card::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--cyan));
+    transform: scaleX(0); transition: transform 0.5s var(--smooth);
+    transform-origin: left;
+}
+.choice-card:hover::before { transform: scaleX(1); }
+.choice-card:hover {
+    border-color: var(--glass-border2);
+    transform: translateY(-6px) !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 40px rgba(108,99,255,0.05);
+}
+
+.card-glow {
+    position: absolute; top: -60%; right: -30%; width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(108,99,255,0.08), transparent 70%);
+    border-radius: 50%; pointer-events: none;
+}
+.cg-2 { background: radial-gradient(circle, rgba(34,211,238,0.08), transparent 70%); }
+.cg-3 { background: radial-gradient(circle, rgba(236,72,153,0.08), transparent 70%); }
+
+.card-icon {
+    width: 64px; height: 64px; border-radius: 18px;
+    display: grid; place-items: center; margin-bottom: 20px;
+    transition: all 0.4s var(--bounce);
+}
+.ci-generate { background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(108,99,255,0.05)); color: var(--primary); }
+.ci-improve { background: linear-gradient(135deg, rgba(34,211,238,0.15), rgba(34,211,238,0.05)); color: var(--cyan); }
+.ci-tools { background: linear-gradient(135deg, rgba(236,72,153,0.15), rgba(236,72,153,0.05)); color: var(--pink); }
+.choice-card:hover .card-icon { transform: scale(1.1) rotate(-5deg); }
+
+.choice-card h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.25rem; font-weight: 700; margin-bottom: 10px; color: var(--ink);
+}
+.choice-card > p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin-bottom: 18px; }
+
+.card-features { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.cf-tag {
+    padding: 5px 12px; border-radius: 50px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+    font-size: 0.74rem; font-weight: 600; color: var(--ink2);
+}
+
+.card-arrow {
+    position: absolute; bottom: 24px; right: 24px;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--glass-bg2); display: grid; place-items: center;
+    color: var(--muted); transition: all 0.3s var(--smooth);
+}
+.choice-card:hover .card-arrow {
+    background: var(--primary); color: white;
+    box-shadow: 0 4px 16px rgba(108,99,255,0.4);
+    transform: translateX(4px);
+}
+
+/* ═══ HOME STATS ═══ */
+.home-stats {
+    display: flex; justify-content: center; gap: 32px; flex-wrap: wrap;
+    max-width: 900px; margin: 0 auto;
+    opacity: 0; animation: fade-up 0.8s var(--smooth) 0.8s forwards;
+    transform: translateY(15px);
+}
+.hstat {
+    display: flex; align-items: center; gap: 14px;
+    padding: 18px 24px; border-radius: var(--radius-sm);
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    transition: all 0.3s var(--smooth); min-width: 180px;
+}
+.hstat:hover { border-color: var(--glass-border2); transform: translateY(-3px); background: var(--glass-bg2); }
+.hstat-icon { font-size: 1.5rem; }
+.hstat-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.4rem; font-weight: 700; color: var(--ink); display: block;
+}
+.hstat-label { font-size: 0.75rem; color: var(--muted); font-weight: 500; }
+
+/* ═══ BACK BUTTON ═══ */
+.back-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 50px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    color: var(--muted); font-family: inherit;
+    font-size: 0.86rem; font-weight: 600; cursor: pointer;
+    transition: all 0.3s var(--smooth); margin-bottom: 28px;
+}
+.back-btn:hover { background: var(--glass-bg2); color: var(--ink); border-color: var(--glass-border2); }
+.back-btn svg { transition: transform 0.3s; }
+.back-btn:hover svg { transform: translateX(-3px); }
+
+/* ═══ SECTION HEADER ═══ */
+.section-header {
+    display: flex; align-items: center; gap: 18px; margin-bottom: 32px;
+}
+.section-icon {
+    width: 56px; height: 56px; border-radius: 18px;
+    display: grid; place-items: center; flex-shrink: 0;
+}
+.si-gen { background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(108,99,255,0.05)); color: var(--primary); }
+.si-imp { background: linear-gradient(135deg, rgba(34,211,238,0.15), rgba(34,211,238,0.05)); color: var(--cyan); }
+
+.section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px; color: var(--ink);
+}
+.section-desc { font-size: 0.9rem; color: var(--muted); margin-top: 4px; }
+
+/* ═══ GENERATOR CARD ═══ */
+.generator-card {
+    position: relative; padding: 36px; border-radius: var(--radius);
+    background: var(--bg-card); border: 1px solid var(--glass-border);
+    backdrop-filter: blur(10px);
+}
+
+.gen-form { display: flex; flex-direction: column; gap: 24px; }
+
+.gen-input-group label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.82rem; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 10px;
+}
+.gen-input-group label svg { stroke: currentColor; }
+
+.gen-input-wrap {
+    position: relative; border-radius: var(--radius-sm); overflow: hidden;
+}
+.gen-input-wrap::before {
+    content: ""; position: absolute; inset: -2px;
+    border-radius: calc(var(--radius-sm) + 2px);
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    opacity: 0; filter: blur(6px); transition: opacity 0.4s; z-index: -1;
+}
+.gen-input-wrap:focus-within::before { opacity: 0.3; }
+
+.gen-input-group input[type="text"] {
+    width: 100%; padding: 16px 20px; border-radius: var(--radius-sm);
+    border: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.025);
+    color: var(--ink); font-size: 0.95rem; font-weight: 500;
+    font-family: inherit; outline: none;
+    transition: all 0.35s var(--smooth);
+}
+.gen-input-group input[type="text"]::placeholder { color: rgba(230,244,255,0.25); }
+.gen-input-group input[type="text"]:focus {
+    border-color: rgba(108,99,255,0.4);
+    background: rgba(108,99,255,0.03);
+    box-shadow: 0 0 0 4px rgba(108,99,255,0.06);
+}
+
+/* Length Selector */
+.length-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.length-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 16px 12px; border-radius: var(--radius-sm);
+    border: 1px solid var(--glass-border); background: var(--glass-bg);
+    cursor: pointer; transition: all 0.3s var(--smooth);
+    font-family: inherit; color: var(--muted);
+}
+.length-btn:hover { background: var(--glass-bg2); border-color: var(--glass-border2); }
+.length-btn.active {
+    border-color: rgba(108,99,255,0.4); background: rgba(108,99,255,0.08);
+    color: var(--ink); box-shadow: 0 0 0 3px rgba(108,99,255,0.08);
+}
+.lb-icon { font-size: 1.3rem; }
+.lb-text { font-size: 0.88rem; font-weight: 700; }
+.lb-desc { font-size: 0.72rem; opacity: 0.6; }
+
+/* Generate Button */
+.gen-submit {
+    position: relative; width: 100%; padding: 18px;
+    border: none; border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white; font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem; font-weight: 700; cursor: pointer; overflow: hidden;
+    transition: all 0.4s var(--smooth);
+    box-shadow: 0 8px 30px rgba(108,99,255,0.3);
+}
+.gen-submit::before {
+    content: ""; position: absolute;
+    top: 0; left: -120%; width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transform: skewX(-15deg); transition: left 0.8s;
+}
+.gen-submit:hover::before { left: 130%; }
+.gen-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 40px rgba(108,99,255,0.4);
+}
+.gen-submit .btn-content {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    position: relative; z-index: 1;
+}
+.gen-submit .btn-content svg { stroke: currentColor; }
+.gen-submit.loading .btn-content { opacity: 0; }
+.gen-submit.loading .btn-loader { display: flex; }
+.btn-loader {
+    display: none; position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%); gap: 6px;
+}
+.bl-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: white;
+    animation: bl-bounce 1.4s ease-in-out infinite;
+}
+.bl-dot:nth-child(2) { animation-delay: 0.16s; }
+.bl-dot:nth-child(3) { animation-delay: 0.32s; }
+@keyframes bl-bounce {
+    0%, 80%, 100% { transform: scale(0.5); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+/* ═══ AI LOADER ═══ */
+.ai-loader {
+    display: none; justify-content: center; padding: 40px; margin-top: 20px;
+}
+.ai-loader.active { display: flex; }
+.ai-loader-inner {
+    position: relative; width: 50px; height: 50px; margin-bottom: 30px;
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+.ai-loader-ring {
+    width: 50px; height: 50px; border-radius: 50%;
+    border: 3px solid transparent;
+    animation: loader-spin 1.2s linear infinite;
+    position: absolute;
+}
+.ai-loader-ring:nth-child(1) { border-top-color: var(--primary); }
+.ai-loader-ring:nth-child(2) {
+    border-right-color: var(--cyan); width: 38px; height: 38px;
+    top: 6px; left: 6px;
+    animation-duration: 1.8s; animation-direction: reverse;
+}
+.ai-loader-ring:nth-child(3) {
+    border-bottom-color: var(--pink); width: 26px; height: 26px;
+    top: 12px; left: 12px; animation-duration: 2.4s;
+}
+.ai-loader-text {
+    position: absolute; bottom: -35px; left: 50%; transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 0.85rem; font-weight: 600; color: var(--muted);
+    animation: loader-text-pulse 2s ease-in-out infinite;
+}
+@keyframes loader-spin { to { transform: rotate(360deg); } }
+@keyframes loader-text-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* ═══ OUTPUT CARD ═══ */
+.output-card {
+    display: none; margin-top: 24px; border-radius: var(--radius);
+    background: var(--bg-card); border: 1px solid var(--glass-border);
+    overflow: hidden; animation: output-in 0.5s var(--smooth);
+}
+.output-card.active { display: block; }
+@keyframes output-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.output-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.02);
+}
+.output-badge {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 14px; border-radius: 50px;
+    background: rgba(108,99,255,0.1); border: 1px solid rgba(108,99,255,0.2);
+    font-size: 0.78rem; font-weight: 700; color: var(--primary-light);
+}
+.output-badge svg { stroke: currentColor; }
+.ob-improve { background: rgba(34,211,238,0.1); border-color: rgba(34,211,238,0.2); color: var(--cyan); }
+
+.output-actions { display: flex; gap: 6px; }
+.oa-btn {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    color: var(--muted); cursor: pointer;
+    display: grid; place-items: center; transition: all 0.25s;
+}
+.oa-btn:hover { background: var(--glass-bg2); color: var(--ink); border-color: var(--glass-border2); }
+
+.output-body {
+    padding: 24px;
+    font-size: 0.95rem; line-height: 1.8; color: var(--ink2);
+    max-height: 400px; overflow-y: auto;
+    white-space: pre-wrap;
+}
+.output-body::-webkit-scrollbar { width: 6px; }
+.output-body::-webkit-scrollbar-track { background: transparent; }
+.output-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+/* ═══ STUDIO LAYOUT ═══ */
+.studio-layout {
+    display: grid; grid-template-columns: 1fr 320px;
+    gap: 24px; margin-bottom: 24px;
+}
+
+.editor-panel {
+    border-radius: var(--radius);
+    background: var(--bg-card); border: 1px solid var(--glass-border);
+    overflow: hidden;
+}
+.editor-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.02);
+}
+.editor-tabs { display: flex; gap: 8px; }
+.ed-tab {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 8px;
+    font-size: 0.82rem; font-weight: 600; color: var(--ink);
+    background: rgba(108,99,255,0.1);
+}
+.ed-tab svg { stroke: currentColor; }
+
+.editor-info { display: flex; gap: 16px; }
+.ei-stat {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 0.78rem; color: var(--muted); font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.editor-body { position: relative; }
+.editor-body textarea {
+    width: 100%; min-height: 320px; padding: 24px;
+    background: transparent; border: none; outline: none;
+    color: var(--ink); font-family: 'Inter', sans-serif;
+    font-size: 0.98rem; line-height: 1.85; resize: vertical;
+}
+.editor-body textarea::placeholder { color: rgba(230,244,255,0.2); }
+.editor-body textarea::-webkit-scrollbar { width: 6px; }
+.editor-body textarea::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+
+.editor-glow {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 60px;
+    background: linear-gradient(to top, var(--bg-card), transparent);
+    pointer-events: none;
+}
+
+/* Action Bar */
+.action-bar {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 16px 20px;
+    border-top: 1px solid var(--glass-border);
+    background: rgba(255,255,255,0.015);
+}
+.action-group { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.action-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 10px 18px; border-radius: var(--radius-xs);
+    border: 1px solid transparent;
+    font-family: inherit; font-size: 0.84rem; font-weight: 700;
+    cursor: pointer; transition: all 0.3s var(--smooth);
+    white-space: nowrap;
+}
+.action-btn svg { stroke: currentColor; }
+
+.ab-primary {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white; box-shadow: 0 4px 16px rgba(108,99,255,0.25);
+}
+.ab-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(108,99,255,0.35); }
+
+.ab-accent {
+    background: linear-gradient(135deg, var(--accent), #f59e0b);
+    color: #1a0a00; box-shadow: 0 4px 16px rgba(245,158,11,0.2);
+}
+.ab-accent:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245,158,11,0.3); }
+
+.ab-cyan {
+    background: linear-gradient(135deg, var(--cyan), var(--emerald));
+    color: #001a1a; box-shadow: 0 4px 16px rgba(34,211,238,0.2);
+}
+.ab-cyan:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(34,211,238,0.3); }
+
+.ab-outline {
+    background: var(--glass-bg); border-color: var(--glass-border); color: var(--ink2);
+}
+.ab-outline:hover { background: var(--glass-bg2); border-color: var(--glass-border2); color: var(--ink); }
+
+/* ═══ ANALYSIS SIDEBAR ═══ */
+.analysis-sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+.analysis-card {
+    padding: 22px; border-radius: var(--radius);
+    background: var(--bg-card); border: 1px solid var(--glass-border);
+    transition: all 0.3s var(--smooth);
+}
+.analysis-card:hover { border-color: var(--glass-border2); }
+
+.ac-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.ac-icon {
+    width: 38px; height: 38px; border-radius: 12px;
+    display: grid; place-items: center; flex-shrink: 0;
+}
+.aci-stats { background: rgba(108,99,255,0.12); color: var(--primary); }
+.aci-prof { background: rgba(16,185,129,0.12); color: var(--emerald); }
+.aci-plag { background: rgba(34,211,238,0.12); color: var(--cyan); }
+.ac-icon svg { stroke: currentColor; }
+
+.ac-header h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.95rem; font-weight: 700; color: var(--ink);
+}
+
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box {
+    padding: 14px; border-radius: var(--radius-xs);
+    background: rgba(255,255,255,0.025); border: 1px solid var(--glass-border);
+    text-align: center;
+}
+.sb-label {
+    display: block; font-size: 0.72rem; color: var(--muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+}
+.sb-value {
+    display: block; font-family: 'JetBrains Mono', monospace;
+    font-size: 1.25rem; font-weight: 700; color: var(--ink);
+}
+
+/* Professionalism Ring */
+.prof-meter { display: flex; justify-content: center; padding: 10px 0; }
+.prof-ring { position: relative; width: 100px; height: 100px; }
+.prof-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.pr-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 8; }
+.pr-fill {
+    fill: none; stroke: var(--emerald); stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 326.73; stroke-dashoffset: 326.73;
+    transition: stroke-dashoffset 1.5s var(--smooth), stroke 0.5s;
+}
+.pr-val {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.4rem; font-weight: 700; color: var(--ink);
+}
+
+/* Plagiarism */
+.plag-result { text-align: center; padding: 10px 0; }
+.plag-icon { font-size: 2rem; margin-bottom: 8px; }
+.plag-result p { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+
+/* ═══ TOAST ═══ */
+.toast {
+    position: fixed; bottom: 30px; left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 24px; border-radius: 14px;
+    background: rgba(10,12,24,0.95); backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    font-size: 0.88rem; font-weight: 600; color: var(--ink);
+    z-index: 9999; transition: transform 0.5s var(--smooth), opacity 0.5s;
+    opacity: 0;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width: 900px) {
+    .studio-layout { grid-template-columns: 1fr; }
+    .analysis-sidebar { flex-direction: row; flex-wrap: wrap; }
+    .analysis-card { flex: 1; min-width: 220px; }
+    .nav-center { display: none; }
+    .home-stats { gap: 16px; }
+    .hstat { min-width: 160px; padding: 14px 18px; }
+}
+@media (max-width: 600px) {
+    nav { padding: 0 12px; }
+    .logo-text { display: none; }
+    .nav-status span { display: none; }
+    .profile-text { display: none; }
+    .main-content { padding: 80px 16px 40px; }
+    .choice-grid { grid-template-columns: 1fr; }
+    .generator-card { padding: 24px 18px; }
+    .length-selector { grid-template-columns: 1fr; }
+    .action-group { flex-direction: column; }
+    .action-btn { justify-content: center; }
+    .hstat { min-width: 140px; }
+    .cursor-dot, .cursor-ring { display: none !important; }
+    body { cursor: auto; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ═══════ BACKGROUND LAYERS ═══════ -->
+<canvas id="bg3d"></canvas>
+<canvas id="particleCanvas"></canvas>
+
+<div class="aurora">
+    <div class="aurora-band"></div>
+    <div class="aurora-band"></div>
+    <div class="aurora-band"></div>
+</div>
+<div class="perspective-grid"></div>
+<div class="shooting-stars">
+    <div class="shooting-star ss-1"></div>
+    <div class="shooting-star ss-2"></div>
+    <div class="shooting-star ss-3"></div>
+</div>
+<div class="floating-elements">
+    <div class="float-el fe-1"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+    <div class="float-el fe-2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+    <div class="float-el fe-3"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/></svg></div>
+    <div class="float-el fe-4"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 22 22 2 22"/></svg></div>
+    <div class="float-el fe-5"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+    <div class="float-el fe-6"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+</div>
+
+<!-- Custom Cursor -->
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- ═══════ NAVIGATION ═══════ -->
+<nav id="mainNav">
+    <a class="logo" href="#">
+        <div class="logo-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="logo-text">AI.CREATIVE</span>
+    </a>
+    <div class="nav-center">
+        <div class="nav-tab active" id="navHome" onclick="goHome()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Home
+        </div>
+        <div class="nav-tab" id="navGenerate" onclick="showTopic()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Generate
+        </div>
+        <div class="nav-tab" id="navImprove" onclick="showImprove()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Improve
+        </div>
+    </div>
+    <div class="nav-right">
+        <div class="nav-status">
+            <div class="status-dot"></div>
+            <span>AI Online</span>
+        </div>
+        <div class="nav-profile" onclick="logoutUser()">
+            <div class="profile-avatar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <span class="profile-text">Logout</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </div>
+    </div>
+</nav>
+
+<!-- ═══════ MAIN CONTENT ═══════ -->
+<main class="main-content">
+
+    <!-- ═══ HOME SECTION ═══ -->
+    <section id="homeSection" class="page-section active">
+        <div class="home-hero">
+            <div class="hero-badge">
+                <div class="badge-pulse"></div>
+                ✦ AI-Powered Writing Studio
+            </div>
+            <h1 class="page-title">
+                <span class="title-line"><span>What would you like</span></span>
+                <span class="title-line"><span class="title-gradient">to create today?</span></span>
+            </h1>
+            <p class="page-desc">Choose a tool below to harness the power of AI for your writing needs</p>
+        </div>
+
+        <div class="choice-grid">
+            <div class="choice-card" onclick="showTopic()">
+                <div class="card-glow"></div>
+                <div class="card-icon ci-generate">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </div>
+                <h3>Generate Content</h3>
+                <p>Create AI-powered descriptions, articles & stories from any topic in seconds</p>
+                <div class="card-features">
+                    <span class="cf-tag">⚡ Instant</span>
+                    <span class="cf-tag">📝 3 Lengths</span>
+                    <span class="cf-tag">🎯 Accurate</span>
+                </div>
+                <div class="card-arrow">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </div>
+            </div>
+
+            <div class="choice-card" onclick="showImprove()">
+                <div class="card-glow cg-2"></div>
+                <div class="card-icon ci-improve">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                </div>
+                <h3>Improve Your Text</h3>
+                <p>Enhance grammar, style, professionalism & check plagiarism with AI analysis</p>
+                <div class="card-features">
+                    <span class="cf-tag">🧠 Smart AI</span>
+                    <span class="cf-tag">🔍 Plagiarism</span>
+                    <span class="cf-tag">✨ Enhance</span>
+                </div>
+                <div class="card-arrow">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </div>
+            </div>
+
+            <div class="choice-card" onclick="showImprove()">
+                <div class="card-glow cg-3"></div>
+                <div class="card-icon ci-tools">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09c-.658.003-1.25.396-1.51 1z"/></svg>
+                </div>
+                <h3>AI Writing Tools</h3>
+                <p>Word count, grammar correction, text enhancement & professional scoring</p>
+                <div class="card-features">
+                    <span class="cf-tag">📊 Analytics</span>
+                    <span class="cf-tag">🔧 Correction</span>
+                    <span class="cf-tag">💎 Polish</span>
+                </div>
+                <div class="card-arrow">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="home-stats">
+            <div class="hstat">
+                <div class="hstat-icon">⚡</div>
+                <div class="hstat-info">
+                    <span class="hstat-num" data-count="50000">0</span>
+                    <span class="hstat-label">Words Generated Today</span>
+                </div>
+            </div>
+            <div class="hstat">
+                <div class="hstat-icon">🧠</div>
+                <div class="hstat-info">
+                    <span class="hstat-num" data-count="1200">0</span>
+                    <span class="hstat-label">Texts Improved</span>
+                </div>
+            </div>
+            <div class="hstat">
+                <div class="hstat-icon">🎯</div>
+                <div class="hstat-info">
+                    <span class="hstat-num" data-count="99">0</span>
+                    <span class="hstat-label">% Accuracy Rate</span>
+                </div>
+            </div>
+            <div class="hstat">
+                <div class="hstat-icon">🌍</div>
+                <div class="hstat-info">
+                    <span class="hstat-num" data-count="30">0</span>
+                    <span class="hstat-label">Languages Supported</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ TOPIC GENERATOR ═══ -->
+    <section id="topicSection" class="page-section">
+        <button class="back-btn" onclick="goHome()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Back to Dashboard
+        </button>
+        <div class="section-header">
+            <div class="section-icon si-gen">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
+            <div>
+                <h2 class="section-title">AI Content Generator</h2>
+                <p class="section-desc">Enter a topic and let AI create stunning content for you</p>
+            </div>
+        </div>
+        <div class="generator-card">
+            <div class="gen-form">
+                <div class="gen-input-group">
+                    <label>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        Topic or Subject
+                    </label>
+                    <div class="gen-input-wrap">
+                        <input type="text" id="topicInput" placeholder="e.g., Artificial Intelligence in Healthcare, Space Exploration...">
+                    </div>
+                </div>
+                <div class="gen-input-group">
+                    <label>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+                        Content Length
+                    </label>
+                    <div class="length-selector">
+                        <button class="length-btn active" data-val="short" onclick="selectLength(this)">
+                            <span class="lb-icon">⚡</span><span class="lb-text">Short</span><span class="lb-desc">~50 words</span>
+                        </button>
+                        <button class="length-btn" data-val="medium" onclick="selectLength(this)">
+                            <span class="lb-icon">📄</span><span class="lb-text">Medium</span><span class="lb-desc">~150 words</span>
+                        </button>
+                        <button class="length-btn" data-val="long" onclick="selectLength(this)">
+                            <span class="lb-icon">📚</span><span class="lb-text">Long</span><span class="lb-desc">~300 words</span>
+                        </button>
+                    </div>
+                    <select id="lengthSelect" style="display:none">
+                        <option value="short">Short</option>
+                        <option value="medium">Medium</option>
+                        <option value="long">Long</option>
+                    </select>
+                </div>
+                <button class="gen-submit" id="genSubmitBtn" onclick="generateTopic()">
+                    <span class="btn-content">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        Generate Content
+                    </span>
+                    <div class="btn-loader"><div class="bl-dot"></div><div class="bl-dot"></div><div class="bl-dot"></div></div>
+                </button>
+            </div>
+            <div id="loaderTopic" class="ai-loader">
+                <div class="ai-loader-inner">
+                    <div class="ai-loader-ring"></div>
+                    <div class="ai-loader-ring"></div>
+                    <div class="ai-loader-ring"></div>
+                    <span class="ai-loader-text">AI is thinking...</span>
+                </div>
+            </div>
+            <div class="output-card" id="topicOutputCard">
+                <div class="output-header">
+                    <div class="output-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        AI Generated
+                    </div>
+                    <div class="output-actions">
+                        <button class="oa-btn" onclick="copyOutput('topicOutput')" title="Copy">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        </button>
+                        <button class="oa-btn" onclick="downloadOutput('topicOutput')" title="Download">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="output-body"><p id="topicOutput"></p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ TEXT IMPROVER ═══ -->
+    <section id="improveSection" class="page-section">
+        <button class="back-btn" onclick="goHome()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Back to Dashboard
+        </button>
+        <div class="section-header">
+            <div class="section-icon si-imp">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </div>
+            <div>
+                <h2 class="section-title">AI Writing Studio</h2>
+                <p class="section-desc">Write, analyze, improve & enhance your text with AI</p>
+            </div>
+        </div>
+
+        <div class="studio-layout">
+            <div class="editor-panel">
+                <div class="editor-header">
+                    <div class="editor-tabs">
+                        <div class="ed-tab active">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                            Editor
+                        </div>
+                    </div>
+                    <div class="editor-info">
+                        <span class="ei-stat">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            <span id="wordCountLive">0</span> words
+                        </span>
+                        <span class="ei-stat"><span id="charCountLive">0</span> chars</span>
+                    </div>
+                </div>
+                <div class="editor-body">
+                    <textarea id="userText" placeholder="Start writing your masterpiece here...&#10;&#10;Paste or type any text, then use the AI tools to analyze, improve, and enhance your writing." oninput="updateWordCount()" spellcheck="true"></textarea>
+                    <div class="editor-glow"></div>
+                </div>
+                <div class="action-bar">
+                    <div class="action-group">
+                        <button class="action-btn ab-primary" onclick="generateText()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            Generate
+                        </button>
+                        <button class="action-btn ab-accent" onclick="enhanceText()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            AI Enhance
+                        </button>
+                        <button class="action-btn ab-cyan" onclick="correctText()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            Correct
+                        </button>
+                    </div>
+                    <div class="action-group">
+                        <button class="action-btn ab-outline" onclick="wordCount()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                            Count
+                        </button>
+                        <button class="action-btn ab-outline" onclick="checkProfessional()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            Professional
+                        </button>
+                        <button class="action-btn ab-outline" onclick="checkPlagiarism()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            Plagiarism
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="analysis-sidebar">
+                <div class="analysis-card ac-stats">
+                    <div class="ac-header">
+                        <div class="ac-icon aci-stats">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        </div>
+                        <h3>Writing Stats</h3>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-box"><span class="sb-label">Words</span><span class="sb-value" id="wordCount">0</span></div>
+                        <div class="stat-box"><span class="sb-label">Characters</span><span class="sb-value" id="charCount">0</span></div>
+                        <div class="stat-box"><span class="sb-label">Sentences</span><span class="sb-value" id="sentenceCount">0</span></div>
+                        <div class="stat-box"><span class="sb-label">Read Time</span><span class="sb-value" id="readTime">0s</span></div>
+                    </div>
+                </div>
+                <div class="analysis-card ac-prof">
+                    <div class="ac-header">
+                        <div class="ac-icon aci-prof">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        </div>
+                        <h3>Professionalism</h3>
+                    </div>
+                    <div class="prof-meter">
+                        <div class="prof-ring" id="profRing">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="pr-bg" cx="60" cy="60" r="52"/>
+                                <circle class="pr-fill" cx="60" cy="60" r="52" id="profCircle"/>
+                            </svg>
+                            <span class="pr-val" id="professionalScore">--</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="analysis-card ac-plag">
+                    <div class="ac-header">
+                        <div class="ac-icon aci-plag">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </div>
+                        <h3>Plagiarism Check</h3>
+                    </div>
+                    <div class="plag-result" id="plagiarismResult">
+                        <div class="plag-icon">🛡️</div>
+                        <p>No analysis yet. Click "Plagiarism" to scan your text.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="loaderText" class="ai-loader">
+            <div class="ai-loader-inner">
+                <div class="ai-loader-ring"></div>
+                <div class="ai-loader-ring"></div>
+                <div class="ai-loader-ring"></div>
+                <span class="ai-loader-text">AI is processing...</span>
+            </div>
+        </div>
+
+        <div class="output-card" id="textOutputCard">
+            <div class="output-header">
+                <div class="output-badge ob-improve">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    AI Result
+                </div>
+                <div class="output-actions">
+                    <button class="oa-btn" onclick="copyOutput('textOutput')" title="Copy">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    </button>
+                    <button class="oa-btn" onclick="downloadOutput('textOutput')" title="Download">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </button>
+                    <button class="oa-btn" onclick="useAsInput()" title="Use as input">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="output-body"><p id="textOutput"></p></div>
+        </div>
+    </section>
+
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+    <div class="toast-icon"></div>
+    <span class="toast-text"></span>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     MEGA JAVASCRIPT ENGINE — ALL MERGED
+     ═══════════════════════════════════════════════ -->
+<script>
+/* ═══ 1. THREE.JS 3D BACKGROUND ═══ */
+(function(){
+    if(typeof THREE==='undefined') return;
+    const canvas=document.getElementById('bg3d');
+    if(!canvas) return;
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,1000);
+    const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+    renderer.setSize(innerWidth,innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    camera.position.z=30;
+    let mX=0,mY=0;
+    document.addEventListener('mousemove',e=>{mX=(e.clientX/innerWidth-0.5)*2;mY=(e.clientY/innerHeight-0.5)*2;});
+    const wf1=new THREE.MeshBasicMaterial({color:0x6c63ff,wireframe:true,transparent:true,opacity:0.06});
+    const wf2=new THREE.MeshBasicMaterial({color:0xa855f7,wireframe:true,transparent:true,opacity:0.05});
+    const wf3=new THREE.MeshBasicMaterial({color:0x22d3ee,wireframe:true,transparent:true,opacity:0.04});
+    const icosa=new THREE.Mesh(new THREE.IcosahedronGeometry(5,1),wf1);icosa.position.set(-14,6,-10);scene.add(icosa);
+    const octa=new THREE.Mesh(new THREE.OctahedronGeometry(3.5,0),wf2);octa.position.set(15,-5,-8);scene.add(octa);
+    const torus=new THREE.Mesh(new THREE.TorusGeometry(4,0.7,16,48),wf3);torus.position.set(-6,-8,-14);scene.add(torus);
+    const dodeca=new THREE.Mesh(new THREE.DodecahedronGeometry(3,0),wf1);dodeca.position.set(12,8,-12);scene.add(dodeca);
+    const tk=new THREE.Mesh(new THREE.TorusKnotGeometry(2.5,0.7,64,8,2,3),wf2);tk.position.set(0,-12,-16);scene.add(tk);
+    const rings=[];const rgeo=new THREE.RingGeometry(0.3,0.5,6);
+    const rmat=new THREE.MeshBasicMaterial({color:0x22d3ee,transparent:true,opacity:0.08,side:THREE.DoubleSide});
+    for(let i=0;i<20;i++){const r=new THREE.Mesh(rgeo,rmat.clone());r.position.set((Math.random()-0.5)*50,(Math.random()-0.5)*40,(Math.random()-0.5)*30-10);r.rotation.set(Math.random()*Math.PI,Math.random()*Math.PI,0);r.userData={spd:Math.random()*0.002+0.001,ax:Math.random()>0.5?'x':'y'};scene.add(r);rings.push(r);}
+    function a3d(){requestAnimationFrame(a3d);const t=Date.now()*0.001;
+    icosa.rotation.x+=0.003;icosa.rotation.y+=0.005;icosa.position.y=6+Math.sin(t*0.5)*2;
+    octa.rotation.x+=0.004;octa.rotation.z+=0.006;octa.position.y=-5+Math.cos(t*0.4)*1.5;
+    torus.rotation.x+=0.002;torus.rotation.y+=0.004;
+    dodeca.rotation.y+=0.005;dodeca.rotation.z+=0.003;dodeca.position.y=8+Math.sin(t*0.6)*1.8;
+    tk.rotation.x+=0.003;tk.rotation.y+=0.002;
+    rings.forEach(r=>{r.rotation[r.userData.ax]+=r.userData.spd;r.position.y+=Math.sin(t+r.position.x)*0.004;});
+    camera.position.x+=(mX*3-camera.position.x)*0.015;camera.position.y+=(-mY*2-camera.position.y)*0.015;
+    camera.lookAt(scene.position);renderer.render(scene,camera);}a3d();
+    window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+})();
+
+/* ═══ 2. PARTICLE CONSTELLATION ═══ */
+(function(){
+    const c=document.getElementById('particleCanvas');if(!c)return;
+    const ctx=c.getContext('2d');let W,H;const ps=[];const N=80;let mx=null,my=null;
+    function resize(){W=c.width=innerWidth;H=c.height=innerHeight;}resize();
+    window.addEventListener('resize',resize);
+    document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+    class P{constructor(){this.x=Math.random()*W;this.y=Math.random()*H;this.vx=(Math.random()-0.5)*0.3;this.vy=(Math.random()-0.5)*0.3;this.r=Math.random()*1.5+0.4;this.o=Math.random()*0.4+0.1;this.hue=240+Math.random()*60;}
+    update(){this.x+=this.vx;this.y+=this.vy;if(mx){const dx=mx-this.x,dy=my-this.y,d=Math.sqrt(dx*dx+dy*dy);if(d<160){const f=(160-d)/160;this.vx-=(dx/d)*f*0.012;this.vy-=(dy/d)*f*0.012;}}this.vx*=0.998;this.vy*=0.998;if(this.x<0||this.x>W)this.vx*=-1;if(this.y<0||this.y>H)this.vy*=-1;}
+    draw(){ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);ctx.fillStyle=`hsla(${this.hue},80%,72%,${this.o})`;ctx.fill();}}
+    for(let i=0;i<N;i++)ps.push(new P());
+    function loop(){ctx.clearRect(0,0,W,H);for(let i=0;i<ps.length;i++){ps[i].update();ps[i].draw();for(let j=i+1;j<ps.length;j++){const dx=ps[i].x-ps[j].x,dy=ps[i].y-ps[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<120){ctx.beginPath();ctx.strokeStyle=`rgba(108,99,255,${(1-d/120)*0.1})`;ctx.lineWidth=0.4;ctx.moveTo(ps[i].x,ps[i].y);ctx.lineTo(ps[j].x,ps[j].y);ctx.stroke();}}}requestAnimationFrame(loop);}loop();
+})();
+
+/* ═══ 3. CUSTOM CURSOR ═══ */
+(function(){
+    const dot=document.getElementById('cursorDot'),ring=document.getElementById('cursorRing');
+    if(!dot||!ring)return;let dx=0,dy=0,rx=0,ry=0;
+    document.addEventListener('mousemove',e=>{dx=e.clientX;dy=e.clientY;});
+    function ac(){rx+=(dx-rx)*0.12;ry+=(dy-ry)*0.12;dot.style.left=dx+'px';dot.style.top=dy+'px';ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(ac);}ac();
+    function addHover(){document.querySelectorAll('button,a,input,textarea,select,.choice-card,.nav-tab,.nav-profile,.oa-btn,.length-btn,.hstat,.back-btn').forEach(el=>{el.addEventListener('mouseenter',()=>{dot.classList.add('hover');ring.classList.add('hover');});el.addEventListener('mouseleave',()=>{dot.classList.remove('hover');ring.classList.remove('hover');});});}addHover();
+    window._refreshCursor=addHover;
+})();
+
+/* ═══ 4. COUNTER ANIMATION ═══ */
+(function(){
+    const counters=document.querySelectorAll('.hstat-num[data-count]');
+    const obs=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){const el=entry.target;const t=parseInt(el.dataset.count);let cur=0;const step=Math.ceil(t/60);const iv=setInterval(()=>{cur+=step;if(cur>=t){cur=t;clearInterval(iv);}if(t>=10000)el.textContent=(cur/1000).toFixed(0)+'K+';else if(t===99)el.textContent=cur+'%';else el.textContent=cur+'+';},30);obs.unobserve(el);}});},{threshold:0.3});
+    counters.forEach(c=>obs.observe(c));
+})();
+
+/* ═══ 5. NAV SCROLL ═══ */
+window.addEventListener('scroll',()=>{const nav=document.getElementById('mainNav');if(nav)nav.classList.toggle('scrolled',window.scrollY>20);});
+
+/* ═══ 6. SECTION SWITCHING ═══ */
+function showSection(id){
+    document.querySelectorAll('.page-section').forEach(s=>{s.classList.remove('active');s.style.display='none';});
+    const el=document.getElementById(id);
+    if(el){el.style.display='block';el.classList.remove('active');void el.offsetWidth;el.classList.add('active');}
+    updateNavTabs(id);if(window._refreshCursor)setTimeout(window._refreshCursor,100);
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+function updateNavTabs(id){
+    document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+    if(id==='homeSection')document.getElementById('navHome')?.classList.add('active');
+    else if(id==='topicSection')document.getElementById('navGenerate')?.classList.add('active');
+    else if(id==='improveSection')document.getElementById('navImprove')?.classList.add('active');
+}
+function goHome(){showSection('homeSection');}
+function showTopic(){showSection('topicSection');}
+function showImprove(){showSection('improveSection');}
+
+/* ═══ 7. LENGTH SELECTOR ═══ */
+function selectLength(btn){
+    document.querySelectorAll('.length-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');document.getElementById('lengthSelect').value=btn.dataset.val;
+}
+
+/* ═══ 8. TOAST ═══ */
+function showToast(msg,icon='✅'){
+    const t=document.getElementById('toast');if(!t)return;
+    t.querySelector('.toast-icon').textContent=icon;t.querySelector('.toast-text').textContent=msg;
+    t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* ═══ 9. COPY / DOWNLOAD / REUSE ═══ */
+function copyOutput(id){const text=document.getElementById(id)?.textContent;if(text)navigator.clipboard.writeText(text).then(()=>showToast('Copied to clipboard!','📋'));}
+function downloadOutput(id){const text=document.getElementById(id)?.textContent;if(!text)return;const blob=new Blob([text],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ai-creative-output.txt';a.click();showToast('Downloaded!','⬇️');}
+function useAsInput(){const text=document.getElementById('textOutput')?.textContent;if(text){document.getElementById('userText').value=text;updateWordCount();showToast('Text moved to editor!','🔄');}}
+
+/* ═══ 10. WORD COUNT / LIVE STATS ═══ */
+function updateWordCount(){
+    const text=document.getElementById('userText').value;
+    const words=text.trim()?text.trim().split(/\s+/).length:0;
+    const chars=text.length;
+    const sentences=text.split(/[.!?]+/).filter(s=>s.trim()).length;
+    const readTime=Math.max(1,Math.ceil(words/200));
+    const wc=document.getElementById('wordCount'),cc=document.getElementById('charCount');
+    const sc=document.getElementById('sentenceCount'),rt=document.getElementById('readTime');
+    if(wc)wc.textContent=words;if(cc)cc.textContent=chars;
+    if(sc)sc.textContent=sentences;if(rt)rt.textContent=readTime+'min';
+    const wcl=document.getElementById('wordCountLive'),ccl=document.getElementById('charCountLive');
+    if(wcl)wcl.textContent=words;if(ccl)ccl.textContent=chars;
+}
+function wordCount(){updateWordCount();const text=document.getElementById('userText').value;const words=text.trim()?text.trim().split(/\s+/).length:0;showToast(`Word Count: ${words} words`,'📝');}
+
+/* ═══ 11. PROFESSIONALISM RING ═══ */
+function updateProfRing(score){
+    const circle=document.getElementById('profCircle'),valEl=document.getElementById('professionalScore');
+    if(!circle||!valEl)return;
+    const circumference=2*Math.PI*52;const offset=circumference-(score/100)*circumference;
+    circle.style.strokeDashoffset=offset;
+    if(score>=80)circle.style.stroke='#10b981';else if(score>=50)circle.style.stroke='#f59e0b';else circle.style.stroke='#f87171';
+    valEl.textContent=score+'%';
+}
+
+/* ═══ 12. LOADER HELPERS ═══ */
+function showLoader(id){const el=document.getElementById(id);if(el)el.classList.add('active');}
+function hideLoader(id){const el=document.getElementById(id);if(el)el.classList.remove('active');}
+function showOutput(id){const el=document.getElementById(id);if(el)el.classList.add('active');}
+
+/* ═══ 13. API CALLS ═══ */
+function generateTopic(){
+    const topic=document.getElementById('topicInput').value;
+    const length=document.getElementById('lengthSelect').value;
+    if(!topic){showToast('Please enter a topic','⚠️');return;}
+    const btn=document.getElementById('genSubmitBtn');if(btn)btn.classList.add('loading');
+    showLoader('loaderTopic');
+    fetch('/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic,length})})
+    .then(r=>r.json()).then(data=>{if(btn)btn.classList.remove('loading');hideLoader('loaderTopic');
+    document.getElementById('topicOutput').textContent=data.result||data.error||'No result';
+    showOutput('topicOutputCard');showToast('Content generated!','⚡');})
+    .catch(()=>{if(btn)btn.classList.remove('loading');hideLoader('loaderTopic');showToast('Error generating content','❌');});
+}
+
+function generateText(){
+    const text=document.getElementById('userText').value;if(!text){showToast('Please write some text first','⚠️');return;}
+    showLoader('loaderText');
+    fetch('/generate-text',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})})
+    .then(r=>r.json()).then(data=>{hideLoader('loaderText');
+    document.getElementById('textOutput').textContent=data.result||data.error||'No result';
+    showOutput('textOutputCard');showToast('Text generated!','⚡');})
+    .catch(()=>{hideLoader('loaderText');showToast('Error generating text','❌');});
+}
+
+function correctText(){
+    const text=document.getElementById('userText').value;if(!text){showToast('Please write some text first','⚠️');return;}
+    showLoader('loaderText');
+    fetch('/correct',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})})
+    .then(r=>r.json()).then(data=>{hideLoader('loaderText');
+    document.getElementById('textOutput').textContent=data.result||data.error||'No result';
+    showOutput('textOutputCard');showToast('Text corrected!','✅');})
+    .catch(()=>{hideLoader('loaderText');showToast('Error correcting text','❌');});
+}
+
+function enhanceText(){
+    const text=document.getElementById('userText').value;if(!text){showToast('Please write some text first','⚠️');return;}
+    showLoader('loaderText');
+    fetch('/enhance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})})
+    .then(r=>r.json()).then(data=>{hideLoader('loaderText');
+    document.getElementById('textOutput').textContent=data.result||data.error||'No result';
+    showOutput('textOutputCard');showToast('Text enhanced with AI!','✨');})
+    .catch(()=>{hideLoader('loaderText');showToast('Error enhancing text','❌');});
+}
+
+function checkProfessional(){
+    const text=document.getElementById('userText').value;if(!text){showToast('Please write some text first','⚠️');return;}
+    showLoader('loaderText');
+    fetch('/check-professional',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})})
+    .then(r=>r.json()).then(data=>{hideLoader('loaderText');const score=parseInt(data.score)||0;
+    updateProfRing(score);document.getElementById('textOutput').textContent=data.result||data.feedback||`Professionalism Score: ${score}%`;
+    showOutput('textOutputCard');showToast(`Professionalism: ${score}%`,'📊');})
+    .catch(()=>{hideLoader('loaderText');showToast('Error checking professionalism','❌');});
+}
+
+function checkPlagiarism(){
+    const text=document.getElementById('userText').value;if(!text){showToast('Please write some text first','⚠️');return;}
+    showLoader('loaderText');const plagEl=document.getElementById('plagiarismResult');
+    if(plagEl)plagEl.innerHTML='<div class="plag-icon">⏳</div><p>Scanning for plagiarism...</p>';
+    fetch('/check-plagiarism',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})})
+    .then(r=>r.json()).then(data=>{hideLoader('loaderText');const result=data.result||data.message||'Analysis complete';
+    if(plagEl)plagEl.innerHTML=`<div class="plag-icon">🛡️</div><p>${result}</p>`;
+    document.getElementById('textOutput').textContent=result;showOutput('textOutputCard');showToast('Plagiarism check done!','🔍');})
+    .catch(()=>{hideLoader('loaderText');if(plagEl)plagEl.innerHTML='<div class="plag-icon">❌</div><p>Error during plagiarism check</p>';showToast('Error checking plagiarism','❌');});
+}
+
+/* ═══ 14. LOGOUT ═══ */
+function logoutUser(){fetch('/logout',{method:'POST'}).then(()=>{window.location.href='/';}).catch(()=>{window.location.href='/';});}
+
+/* ═══ 15. MAGNETIC HOVER ═══ */
+document.querySelectorAll('.gen-submit,.action-btn,.choice-card').forEach(el=>{
+    el.addEventListener('mousemove',function(e){const r=this.getBoundingClientRect();const x=e.clientX-r.left-r.width/2;const y=e.clientY-r.top-r.height/2;this.style.transform=`translate(${x*0.04}px,${y*0.04}px)`;});
+    el.addEventListener('mouseleave',function(){this.style.transform='';});
+});
+
+/* ═══ 16. KEYBOARD SHORTCUTS ═══ */
+document.addEventListener('keydown',e=>{
+    if(e.ctrlKey&&e.key==='Enter'){const active=document.querySelector('.page-section.active');if(active?.id==='topicSection')generateTopic();else if(active?.id==='improveSection')generateText();}
+    if(e.key==='Escape')goHome();
+});
+
+/* ═══ 17. INIT ═══ */
+document.addEventListener('DOMContentLoaded',()=>{showSection('homeSection');});
+</script>
+
+</body>
+</html>
